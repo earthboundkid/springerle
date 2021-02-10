@@ -1,0 +1,5 @@
+greeting: hello
+who: who? world
+when:
+-- {{ .greeting|tocamelcase }}/{{ .who }}.txt --
+{{ .greeting }}, {{ .who }}!
