@@ -2,7 +2,7 @@
 
 Springerle are a kind of German prestamped cookie. Springerle is a command line tool for creating simple prestamped project files with the txtar format and Go templates.
 
-
+![](images/springerle.jpeg)
 
 ## Installation
 
