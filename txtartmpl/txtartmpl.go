@@ -9,12 +9,13 @@ import (
 	"log"
 	"os"
 	"path/filepath"
+	"sort"
 	"strings"
 	"text/template"
 
 	"github.com/carlmjohnson/flagext"
-	"github.com/huandu/xstrings"
 	"github.com/manifoldco/promptui"
+	"github.com/mitchellh/go-wordwrap"
 	"golang.org/x/tools/txtar"
 )
 
@@ -40,7 +41,7 @@ func (app *appEnv) ParseArgs(args []string) error {
 		fl, app.Logger, "verbose", flagext.LogVerbose, "log debug output")
 	fl.StringVar(&app.dstPath, "dest", ".", "destination `path`")
 	fl.BoolVar(&app.dryRun, "dry-run", false, "dry run output only (output txtar to stdout)")
-	fl.Usage = app.usage(fl)
+	app.setusage(fl)
 	if err := fl.Parse(args); err != nil {
 		return err
 	}
@@ -65,21 +66,66 @@ type appEnv struct {
 	*log.Logger
 }
 
-func (app *appEnv) usage(fl *flag.FlagSet) func() {
-	return func() {
-		fmt.Fprintf(fl.Output(), `springerle - a Go CLI application template cat clone
+func (app *appEnv) setusage(fl *flag.FlagSet) {
+	fl.Usage = func() {
+		fmt.Fprintf(
+			fl.Output(),
+			`springerle - create simple projects with the txtar format and Go templates.
 
 Usage:
 
-	springerle [options]
+	springerle [options] <project file or URL>
 
-TODO: write help, document template funcs
+Project files are Go templates processed as txtar files. The preamble to the
+txtar file is used as prompts for creating the template context. Each line
+should be formated as "key: User prompt question? default value" with colon and
+question mark used as delimiters. Lines beginning with # or without a colon are
+ignored. If the default value is "y" or "n", the prompt will be treated as a
+boolean.
+
+In addition to the default Go template functions, templates can use the
+following functions.
+
+From package strings:
+
+%s
+
+From package path/filepath:
+
+%s
+
+From package time:
+
+%s
+
+From github.com/huandu/xstrings:
+
+%s
+
+From github.com/mitchellh/go-wordwrap
+
+%s
 
 Options:
-`)
+`,
+			sortFuncMapNames(StringFuncMap()),
+			sortFuncMapNames(FilepathFuncMap()),
+			sortFuncMapNames(TimeFuncMap()),
+			sortFuncMapNames(XStringFuncMap()),
+			sortFuncMapNames(WordWrapFuncMap()),
+		)
 		fl.PrintDefaults()
-		fmt.Fprintln(fl.Output(), "")
+		fmt.Fprintln(fl.Output())
 	}
+}
+
+func sortFuncMapNames(m template.FuncMap) string {
+	ss := make([]string, 0, len(m))
+	for k := range m {
+		ss = append(ss, k)
+	}
+	sort.Strings(ss)
+	return wordwrap.WrapString(strings.Join(ss, " "), 80)
 }
 
 func (app *appEnv) Exec() (err error) {
@@ -90,9 +136,11 @@ func (app *appEnv) Exec() (err error) {
 	}
 	// check template validity
 	t := template.New("").
-		Funcs(XStringFuncMap()).
 		Funcs(StringFuncMap()).
-		Funcs(FilepathFuncMap())
+		Funcs(FilepathFuncMap()).
+		Funcs(TimeFuncMap()).
+		Funcs(XStringFuncMap()).
+		Funcs(WordWrapFuncMap())
 	if t, err = t.Parse(buf.String()); err != nil {
 		return fmt.Errorf("could not parse input as template: %w", err)
 	}
@@ -157,10 +205,14 @@ func (app *appEnv) getTCtx(b []byte) (map[string]string, error) {
 			line = line[i+1:]
 		}
 		v = strings.TrimSpace(line)
+		validator := boolPrompt
+		if v != "y" && v != "n" {
+			validator = nil
+		}
 		prompt := promptui.Prompt{
-			Label:     q,
-			Default:   v,
-			IsConfirm: v == "y" || v == "n",
+			Label:    q,
+			Default:  v,
+			Validate: validator,
 		}
 		var err error
 		m[k], err = prompt.Run()
@@ -171,116 +223,13 @@ func (app *appEnv) getTCtx(b []byte) (map[string]string, error) {
 	return m, s.Err()
 }
 
-func XStringFuncMap() map[string]interface{} {
-	return map[string]interface{}{
-		"center":           xstrings.Center,
-		"countpattern":     xstrings.Count,
-		"delete":           xstrings.Delete,
-		"expandtabs":       xstrings.ExpandTabs,
-		"firstrunetolower": xstrings.FirstRuneToLower,
-		"firstrunetoupper": xstrings.FirstRuneToUpper,
-		"insert":           xstrings.Insert,
-		"lastpartition": func(str, sep string) [3]string {
-			f, p, l := xstrings.LastPartition(str, sep)
-			return [...]string{f, p, l}
-		},
-		"leftjustify": xstrings.LeftJustify,
-		"runelen":     xstrings.Len,
-		"partition": func(str, sep string) [3]string {
-			f, p, l := xstrings.Partition(str, sep)
-			return [...]string{f, p, l}
-		},
-		"reverse":       xstrings.Reverse,
-		"rightjustify":  xstrings.RightJustify,
-		"runewidth":     xstrings.RuneWidth,
-		"scrub":         xstrings.Scrub,
-		"shuffle":       xstrings.Shuffle,
-		"shufflesource": xstrings.ShuffleSource,
-		"slice":         xstrings.Slice,
-		"squeeze":       xstrings.Squeeze,
-		"successor":     xstrings.Successor,
-		"swapcase":      xstrings.SwapCase,
-		"tocamelcase":   xstrings.ToCamelCase,
-		"tokebabcase":   xstrings.ToKebabCase,
-		"tosnakecase":   xstrings.ToSnakeCase,
-		"translate":     xstrings.Translate,
-		"width":         xstrings.Width,
-		"wordcount":     xstrings.WordCount,
-		"wordsplit":     xstrings.WordSplit,
-	}
-}
+var boolVals = [...]string{"y", "yes", "no", "n"}
 
-func StringFuncMap() map[string]interface{} {
-	return map[string]interface{}{
-		"compare":        strings.Compare,
-		"contains":       strings.Contains,
-		"containsany":    strings.ContainsAny,
-		"containsrune":   strings.ContainsRune,
-		"count":          strings.Count,
-		"equalfold":      strings.EqualFold,
-		"fields":         strings.Fields,
-		"fieldsfunc":     strings.FieldsFunc,
-		"hasprefix":      strings.HasPrefix,
-		"hassuffix":      strings.HasSuffix,
-		"index":          strings.Index,
-		"indexany":       strings.IndexAny,
-		"indexbyte":      strings.IndexByte,
-		"indexfunc":      strings.IndexFunc,
-		"indexrune":      strings.IndexRune,
-		"join":           strings.Join,
-		"lastindex":      strings.LastIndex,
-		"lastindexany":   strings.LastIndexAny,
-		"lastindexbyte":  strings.LastIndexByte,
-		"lastindexfunc":  strings.LastIndexFunc,
-		"map":            strings.Map,
-		"repeat":         strings.Repeat,
-		"replace":        strings.Replace,
-		"replaceall":     strings.ReplaceAll,
-		"split":          strings.Split,
-		"splitafter":     strings.SplitAfter,
-		"splitaftern":    strings.SplitAfterN,
-		"splitn":         strings.SplitN,
-		"title":          strings.Title,
-		"tolower":        strings.ToLower,
-		"tolowerspecial": strings.ToLowerSpecial,
-		"totitle":        strings.ToTitle,
-		"totitlespecial": strings.ToTitleSpecial,
-		"toupper":        strings.ToUpper,
-		"toupperspecial": strings.ToUpperSpecial,
-		"tovalidutf8":    strings.ToValidUTF8,
-		"trim":           strings.Trim,
-		"trimfunc":       strings.TrimFunc,
-		"trimleft":       strings.TrimLeft,
-		"trimleftfunc":   strings.TrimLeftFunc,
-		"trimprefix":     strings.TrimPrefix,
-		"trimright":      strings.TrimRight,
-		"trimrightfunc":  strings.TrimRightFunc,
-		"trimspace":      strings.TrimSpace,
-		"trimsuffix":     strings.TrimSuffix,
+func boolPrompt(input string) error {
+	for _, value := range boolVals {
+		if strings.ToLower(input) == value {
+			return nil
+		}
 	}
-}
-
-func FilepathFuncMap() map[string]interface{} {
-	return map[string]interface{}{
-		"abs":          filepath.Abs,
-		"base":         filepath.Base,
-		"clean":        filepath.Clean,
-		"dir":          filepath.Dir,
-		"evalsymlinks": filepath.EvalSymlinks,
-		"ext":          filepath.Ext,
-		"fromslash":    filepath.FromSlash,
-		"glob":         filepath.Glob,
-		"hasprefix":    filepath.HasPrefix,
-		"isabs":        filepath.IsAbs,
-		"join":         filepath.Join,
-		"match":        filepath.Match,
-		"rel":          filepath.Rel,
-		"split": func(path string) [2]string {
-			head, tail := filepath.Split(path)
-			return [...]string{head, tail}
-		},
-		"splitlist":  filepath.SplitList,
-		"toslash":    filepath.ToSlash,
-		"volumename": filepath.VolumeName,
-	}
+	return fmt.Errorf("Response should be one of the values %v", boolVals)
 }
