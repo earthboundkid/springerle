@@ -11,12 +11,12 @@ First install [Go](http://golang.org).
 If you just want to install the binary to your current directory and don't care about the source code, run
 
 ```bash
-go install github.com/carlmjohnson/springerle@latest
+GOBIN=$(pwd) go install github.com/carlmjohnson/springerle@latest
 ```
 
 ## Screenshots
 
-```bash
+```
 $ springerle -h
 springerle - create simple projects with the txtar format and Go templates.
 
