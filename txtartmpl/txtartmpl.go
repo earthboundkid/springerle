@@ -75,7 +75,7 @@ Usage:
 
 	springerle [options] <project file or URL>
 
-Project files are Go templates processed as txtar files. The preamble to the txtar file is used as prompts for creating the template context. Each line should be formated as "key: User prompt question? default value" with colon and question mark used as delimiters. Lines beginning with # or without a colon are ignored. If the default value is "y" or "n", the prompt will be treated as a boolean.
+Project files are Go templates processed as txtar files. The preamble to the txtar file is used as a series of prompts for creating the template context. Each line should be formated as "key: User prompt question? default value" with colon and question mark used as delimiters. Lines beginning with # or without a colon are ignored. If the default value is "y" or "n", the prompt will be treated as a boolean. Prompt lines may use templates directives, e.g. to transform a prior prompt value into a default or skip irrelevant prompts, but premable template directives must be valid at the line level. That is, there can be no multiline blocks in the preamble.
 
 In addition to the default Go template functions, templates can use the following functions.
 
@@ -186,6 +186,21 @@ func (app *appEnv) getTCtx(b []byte) (map[string]interface{}, error) {
 		)
 		if strings.HasPrefix(line, "#") {
 			continue
+		}
+		if strings.Contains(line, "{"+"{") {
+			var buf strings.Builder
+			t := template.New("").
+				Funcs(StringFuncMap()).
+				Funcs(FilepathFuncMap()).
+				Funcs(TimeFuncMap()).
+				Funcs(XStringFuncMap()).
+				Funcs(WordWrapFuncMap())
+			t, err := t.Parse(line)
+			if err != nil {
+				return nil, fmt.Errorf("could not parse preliminary prompt as template: %w", err)
+			}
+			t.Execute(&buf, m)
+			line = buf.String()
 		}
 		if i = strings.IndexByte(line, ':'); i == -1 {
 			continue
