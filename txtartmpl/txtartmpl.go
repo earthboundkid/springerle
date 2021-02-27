@@ -68,23 +68,16 @@ type appEnv struct {
 
 func (app *appEnv) setusage(fl *flag.FlagSet) {
 	fl.Usage = func() {
-		fmt.Fprintf(
-			fl.Output(),
+		s := fmt.Sprintf(
 			`springerle - create simple projects with the txtar format and Go templates.
 
 Usage:
 
 	springerle [options] <project file or URL>
 
-Project files are Go templates processed as txtar files. The preamble to the
-txtar file is used as prompts for creating the template context. Each line
-should be formated as "key: User prompt question? default value" with colon and
-question mark used as delimiters. Lines beginning with # or without a colon are
-ignored. If the default value is "y" or "n", the prompt will be treated as a
-boolean.
+Project files are Go templates processed as txtar files. The preamble to the txtar file is used as prompts for creating the template context. Each line should be formated as "key: User prompt question? default value" with colon and question mark used as delimiters. Lines beginning with # or without a colon are ignored. If the default value is "y" or "n", the prompt will be treated as a boolean.
 
-In addition to the default Go template functions, templates can use the
-following functions.
+In addition to the default Go template functions, templates can use the following functions.
 
 From package strings:
 
@@ -114,6 +107,7 @@ Options:
 			sortFuncMapNames(XStringFuncMap()),
 			sortFuncMapNames(WordWrapFuncMap()),
 		)
+		fmt.Fprint(fl.Output(), wordwrap.WrapString(s, 79))
 		fl.PrintDefaults()
 		fmt.Fprintln(fl.Output())
 	}
@@ -125,7 +119,7 @@ func sortFuncMapNames(m template.FuncMap) string {
 		ss = append(ss, k)
 	}
 	sort.Strings(ss)
-	return wordwrap.WrapString(strings.Join(ss, " "), 80)
+	return strings.Join(ss, " ")
 }
 
 func (app *appEnv) Exec() (err error) {
@@ -181,8 +175,8 @@ func (app *appEnv) Exec() (err error) {
 	return err
 }
 
-func (app *appEnv) getTCtx(b []byte) (map[string]string, error) {
-	m := make(map[string]string)
+func (app *appEnv) getTCtx(b []byte) (map[string]interface{}, error) {
+	m := make(map[string]interface{})
 	s := bufio.NewScanner(bytes.NewReader(b))
 	for s.Scan() {
 		line := s.Text()
@@ -205,14 +199,30 @@ func (app *appEnv) getTCtx(b []byte) (map[string]string, error) {
 			line = line[i+1:]
 		}
 		v = strings.TrimSpace(line)
-		validator := boolPrompt
-		if v != "y" && v != "n" {
-			validator = nil
+
+		if v == "y" || v == "n" {
+			curpos := 0
+			if v == "n" {
+				curpos = 1
+			}
+			selector := promptui.Select{
+				Label:     q,
+				Items:     []string{"Yes", "No"},
+				CursorPos: curpos,
+				Stdout:    bellSkipper{},
+			}
+
+			n, _, err := selector.Run()
+			if err != nil {
+				return nil, err
+			}
+			m[k] = n == 0
+
+			continue
 		}
 		prompt := promptui.Prompt{
-			Label:    q,
-			Default:  v,
-			Validate: validator,
+			Label:   q,
+			Default: v,
 		}
 		var err error
 		m[k], err = prompt.Run()
@@ -223,13 +233,25 @@ func (app *appEnv) getTCtx(b []byte) (map[string]string, error) {
 	return m, s.Err()
 }
 
-var boolVals = [...]string{"y", "yes", "no", "n"}
+// bellSkipper implements an io.WriteCloser that skips the terminal bell
+// character (ASCII code 7), and writes the rest to os.Stderr. It is used to
+// replace readline.Stdout, that is the package used by promptui to display the
+// prompts.
+//
+// This is a workaround for the bell issue documented in
+// https://github.com/manifoldco/promptui/issues/49.
+type bellSkipper struct{}
 
-func boolPrompt(input string) error {
-	for _, value := range boolVals {
-		if strings.ToLower(input) == value {
-			return nil
-		}
+// Write implements an io.WriterCloser over os.Stderr, but it skips the terminal
+// bell character.
+func (bs bellSkipper) Write(b []byte) (int, error) {
+	if string(b) == "\a" {
+		return 0, nil
 	}
-	return fmt.Errorf("Response should be one of the values %v", boolVals)
+	return os.Stderr.Write(b)
+}
+
+// Close implements an io.WriterCloser over os.Stderr.
+func (bs bellSkipper) Close() error {
+	return os.Stderr.Close()
 }
