@@ -22,6 +22,8 @@ import (
 
 const AppName = "springerle"
 
+// CLI runs the springerle command line application. The application name (os.Args[0])
+// should not be passed to CLI. The returned error contains the CLI's the exit code.
 func CLI(args []string) error {
 	var app appEnv
 	err := app.ParseArgs(args)
@@ -148,7 +150,7 @@ func (app *appEnv) Exec() (err error) {
 	}
 	// read preamble by line, make up a Question context map
 	ar := txtar.Parse(buf.Bytes())
-	tctx, err := app.getTCtx(ar.Comment)
+	tctx, err := app.TemplateContextFrom(ar.Comment)
 	if err != nil {
 		return err
 	}
@@ -183,7 +185,7 @@ func (app *appEnv) Exec() (err error) {
 	return err
 }
 
-func (app *appEnv) getTCtx(b []byte) (map[string]interface{}, error) {
+func (app *appEnv) TemplateContextFrom(b []byte) (map[string]interface{}, error) {
 	if app.tmplCtx != nil {
 		return app.tmplCtx, nil
 	}
@@ -257,27 +259,4 @@ func (app *appEnv) getTCtx(b []byte) (map[string]interface{}, error) {
 		}
 	}
 	return m, s.Err()
-}
-
-// bellSkipper implements an io.WriteCloser that skips the terminal bell
-// character (ASCII code 7), and writes the rest to os.Stderr. It is used to
-// replace readline.Stdout, that is the package used by promptui to display the
-// prompts.
-//
-// This is a workaround for the bell issue documented in
-// https://github.com/manifoldco/promptui/issues/49.
-type bellSkipper struct{}
-
-// Write implements an io.WriterCloser over os.Stderr, but it skips the terminal
-// bell character.
-func (bs bellSkipper) Write(b []byte) (int, error) {
-	if string(b) == "\a" {
-		return 0, nil
-	}
-	return os.Stderr.Write(b)
-}
-
-// Close implements an io.WriterCloser over os.Stderr.
-func (bs bellSkipper) Close() error {
-	return os.Stderr.Close()
 }
