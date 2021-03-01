@@ -3,6 +3,7 @@ package txtartmpl
 import (
 	"bufio"
 	"bytes"
+	"encoding/json"
 	"flag"
 	"fmt"
 	"io"
@@ -41,6 +42,7 @@ func (app *appEnv) ParseArgs(args []string) error {
 		fl, app.Logger, "verbose", flagext.LogVerbose, "log debug output")
 	fl.StringVar(&app.dstPath, "dest", ".", "destination `path`")
 	fl.BoolVar(&app.dryRun, "dry-run", false, "dry run output only (output txtar to stdout)")
+	fl.Func("context", "`JSON` object to use as template context", app.setTmplCtx)
 	app.setusage(fl)
 	if err := fl.Parse(args); err != nil {
 		return err
@@ -63,6 +65,7 @@ type appEnv struct {
 	dstPath string
 	dryRun  bool
 	src     io.ReadCloser
+	tmplCtx map[string]interface{}
 	*log.Logger
 }
 
@@ -111,6 +114,11 @@ Options:
 		fl.PrintDefaults()
 		fmt.Fprintln(fl.Output())
 	}
+}
+
+func (app *appEnv) setTmplCtx(s string) error {
+	app.tmplCtx = make(map[string]interface{})
+	return json.Unmarshal([]byte(s), &app.tmplCtx)
 }
 
 func sortFuncMapNames(m template.FuncMap) string {
@@ -176,6 +184,9 @@ func (app *appEnv) Exec() (err error) {
 }
 
 func (app *appEnv) getTCtx(b []byte) (map[string]interface{}, error) {
+	if app.tmplCtx != nil {
+		return app.tmplCtx, nil
+	}
 	m := make(map[string]interface{})
 	s := bufio.NewScanner(bytes.NewReader(b))
 	for s.Scan() {
