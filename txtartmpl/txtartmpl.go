@@ -104,11 +104,11 @@ From github.com/mitchellh/go-wordwrap
 
 Options:
 `,
-			sortFuncMapNames(StringFuncMap()),
-			sortFuncMapNames(FilepathFuncMap()),
-			sortFuncMapNames(TimeFuncMap()),
-			sortFuncMapNames(XStringFuncMap()),
-			sortFuncMapNames(WordWrapFuncMap()),
+			sortFuncMapNames(stringFuncMap()),
+			sortFuncMapNames(filepathFuncMap()),
+			sortFuncMapNames(timeFuncMap()),
+			sortFuncMapNames(xStringFuncMap()),
+			sortFuncMapNames(wordWrapFuncMap()),
 		)
 		fmt.Fprint(fl.Output(), wordwrap.WrapString(s, 79))
 		fl.PrintDefaults()
@@ -138,11 +138,11 @@ func (app *appEnv) Exec() (err error) {
 	}
 	// check template validity
 	t := template.New("").
-		Funcs(StringFuncMap()).
-		Funcs(FilepathFuncMap()).
-		Funcs(TimeFuncMap()).
-		Funcs(XStringFuncMap()).
-		Funcs(WordWrapFuncMap())
+		Funcs(stringFuncMap()).
+		Funcs(filepathFuncMap()).
+		Funcs(timeFuncMap()).
+		Funcs(xStringFuncMap()).
+		Funcs(wordWrapFuncMap())
 	if t, err = t.Parse(buf.String()); err != nil {
 		return fmt.Errorf("could not parse input as template: %w", err)
 	}
@@ -201,11 +201,11 @@ func (app *appEnv) getTCtx(b []byte) (map[string]interface{}, error) {
 		if strings.Contains(line, "{"+"{") {
 			var buf strings.Builder
 			t := template.New("").
-				Funcs(StringFuncMap()).
-				Funcs(FilepathFuncMap()).
-				Funcs(TimeFuncMap()).
-				Funcs(XStringFuncMap()).
-				Funcs(WordWrapFuncMap())
+				Funcs(stringFuncMap()).
+				Funcs(filepathFuncMap()).
+				Funcs(timeFuncMap()).
+				Funcs(xStringFuncMap()).
+				Funcs(wordWrapFuncMap())
 			t, err := t.Parse(line)
 			if err != nil {
 				return nil, fmt.Errorf("could not parse preliminary prompt as template: %w", err)

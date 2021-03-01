@@ -9,7 +9,7 @@ import (
 	"github.com/mitchellh/go-wordwrap"
 )
 
-func XStringFuncMap() map[string]interface{} {
+func xStringFuncMap() map[string]interface{} {
 	return map[string]interface{}{
 		"center":           xstrings.Center,
 		"countpattern":     xstrings.Count,
@@ -48,7 +48,7 @@ func XStringFuncMap() map[string]interface{} {
 	}
 }
 
-func StringFuncMap() map[string]interface{} {
+func stringFuncMap() map[string]interface{} {
 	return map[string]interface{}{
 		"compare":        strings.Compare,
 		"contains":       strings.Contains,
@@ -98,7 +98,7 @@ func StringFuncMap() map[string]interface{} {
 	}
 }
 
-func FilepathFuncMap() map[string]interface{} {
+func filepathFuncMap() map[string]interface{} {
 	return map[string]interface{}{
 		"abs":       filepath.Abs,
 		"base":      filepath.Base,
@@ -120,7 +120,7 @@ func FilepathFuncMap() map[string]interface{} {
 	}
 }
 
-func TimeFuncMap() map[string]interface{} {
+func timeFuncMap() map[string]interface{} {
 	return map[string]interface{}{
 		"parseduration": time.ParseDuration,
 		"date":          time.Date,
@@ -129,7 +129,7 @@ func TimeFuncMap() map[string]interface{} {
 	}
 }
 
-func WordWrapFuncMap() map[string]interface{} {
+func wordWrapFuncMap() map[string]interface{} {
 	return map[string]interface{}{
 		"wrapstring": wordwrap.WrapString,
 	}
