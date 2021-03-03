@@ -1,6 +1,6 @@
 # Springerle [![GoDoc](https://godoc.org/github.com/carlmjohnson/springerle?status.svg)](https://godoc.org/github.com/carlmjohnson/springerle) [![Go Report Card](https://goreportcard.com/badge/github.com/carlmjohnson/springerle)](https://goreportcard.com/report/github.com/carlmjohnson/springerle)
 
-Springerle are a kind of German prestamped cookie. Springerle is a command line tool for creating simple prestamped project files with the txtar format and Go templates.
+Springerle are a kind of German prestamped cookie. Springerle is a command line tool for creating simple prestamped project files with the txtar format and Go templates. Inspired by [Cookiecutter](https://cookiecutter.readthedocs.io/) and [JTree Stamp](https://github.com/publicdomaincompany/jtree/tree/master/langs/stamp).
 
 ![](images/springerle.jpeg)
 
