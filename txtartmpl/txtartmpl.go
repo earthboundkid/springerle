@@ -172,7 +172,11 @@ func (app *appEnv) Exec() (err error) {
 	}
 
 	for _, f := range ar.Files {
-		name := filepath.FromSlash(filepath.Join(app.dstPath, filepath.Clean(f.Name)))
+		name := filepath.Clean(f.Name)
+		if strings.HasPrefix(name, "../") {
+			return fmt.Errorf("won't write unsafe file name to disk: %q", f.Name)
+		}
+		name = filepath.FromSlash(filepath.Join(app.dstPath, name))
 		if err := os.MkdirAll(filepath.Dir(name), 0o777); err != nil {
 			return err
 		}
