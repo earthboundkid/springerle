@@ -14,8 +14,8 @@ import (
 	"strings"
 	"text/template"
 
+	"github.com/Songmu/prompter"
 	"github.com/carlmjohnson/flagext"
-	"github.com/manifoldco/promptui"
 	"github.com/mitchellh/go-wordwrap"
 	"golang.org/x/tools/txtar"
 )
@@ -233,34 +233,18 @@ func (app *appEnv) TemplateContextFrom(b []byte) (map[string]interface{}, error)
 		v = strings.TrimSpace(line)
 
 		if v == "y" || v == "n" {
-			curpos := 0
-			if v == "n" {
-				curpos = 1
-			}
-			selector := promptui.Select{
-				Label:     q,
-				Items:     []string{"Yes", "No"},
-				CursorPos: curpos,
-				Stdout:    bellSkipper{},
-			}
+			val := prompter.YN(q, v == "y")
+			if val {
 
-			n, _, err := selector.Run()
-			if err != nil {
-				return nil, err
+				m[k] = "y"
+			} else {
+				m[k] = "n"
 			}
-			m[k] = n == 0
 
 			continue
 		}
-		prompt := promptui.Prompt{
-			Label:   q,
-			Default: v,
-		}
-		var err error
-		m[k], err = prompt.Run()
-		if err != nil {
-			return nil, err
-		}
+
+		m[k] = prompter.Prompt(q, v)
 	}
 	return m, s.Err()
 }
