@@ -181,7 +181,11 @@ func (app *appEnv) Exec() (err error) {
 			return err
 		}
 		app.Printf("writing %q", name)
-		if err := os.WriteFile(name, f.Data, 0o666); err != nil {
+		var perm os.FileMode = 0o666
+		if filepath.Ext(name) == ".sh" {
+			perm = 0o777
+		}
+		if err := os.WriteFile(name, f.Data, perm); err != nil {
 			return err
 		}
 	}
