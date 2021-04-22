@@ -240,14 +240,7 @@ func (app *appEnv) TemplateContextFrom(b []byte) (map[string]interface{}, error)
 		v = strings.TrimSpace(line)
 
 		if v == "y" || v == "n" {
-			val := prompter.YN(q, v == "y")
-			if val {
-
-				m[k] = "y"
-			} else {
-				m[k] = "n"
-			}
-
+			m[k] = prompter.YN(q, v == "y")
 			continue
 		}
 
