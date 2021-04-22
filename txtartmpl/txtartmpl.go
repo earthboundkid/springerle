@@ -140,6 +140,7 @@ func (app *appEnv) Exec() (err error) {
 	}
 	// check template validity
 	t := template.New("").
+		Option("missingkey=error").
 		Funcs(stringFuncMap()).
 		Funcs(filepathFuncMap()).
 		Funcs(timeFuncMap()).
@@ -156,7 +157,9 @@ func (app *appEnv) Exec() (err error) {
 	}
 	// feed src through template.Template
 	buf.Reset()
-	t.Execute(&buf, tctx)
+	if err = t.Execute(&buf, tctx); err != nil {
+		return err
+	}
 
 	// make all the files
 	ar = txtar.Parse(buf.Bytes())
