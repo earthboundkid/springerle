@@ -1,5 +1,12 @@
-greeting: hello
-who: who? world
-when:
--- {{ .greeting|tocamelcase }}/{{ .who }}.txt --
-{{ .greeting }}, {{ .who }}!
+proj: Project name? My Project
+file: File name? {{ .proj | tokebabcase }}
+class: Class name? {{ .proj | tocamelcase }}
+skip: Skip this? y
+{{ if not .skip }}final: Anything else? n{{end}}
+-- {{ .proj }}/{{ .file }}.txt --
+class {{ .class }}
+{{ printf "%#v" .skip }}
+{{ if not .skip }}
+-- {{ .proj }}/{{ .final }}.txt --
+Not skipped!
+{{ end }}
