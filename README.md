@@ -18,7 +18,7 @@ GOBIN=$(pwd) go install github.com/carlmjohnson/springerle@latest
 
 ```
 $ springerle -h
-springerle - create simple projects with the txtar format and Go templates.
+springerle v0.21.2 - create simple projects with the txtar format and Go templates.
 
 Usage:
 

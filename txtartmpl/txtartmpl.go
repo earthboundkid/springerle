@@ -10,6 +10,7 @@ import (
 	"log"
 	"os"
 	"path/filepath"
+	"runtime/debug"
 	"sort"
 	"strings"
 	"text/template"
@@ -73,8 +74,12 @@ type appEnv struct {
 
 func (app *appEnv) setusage(fl *flag.FlagSet) {
 	fl.Usage = func() {
+		version := "(unknown)"
+		if i, ok := debug.ReadBuildInfo(); ok {
+			version = i.Main.Version
+		}
 		s := fmt.Sprintf(
-			`springerle - create simple projects with the txtar format and Go templates.
+			`springerle %s - create simple projects with the txtar format and Go templates.
 
 Usage:
 
@@ -106,6 +111,7 @@ From github.com/mitchellh/go-wordwrap
 
 Options:
 `,
+			version,
 			sortFuncMapNames(stringFuncMap()),
 			sortFuncMapNames(filepathFuncMap()),
 			sortFuncMapNames(timeFuncMap()),
