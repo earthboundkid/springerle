@@ -64,10 +64,14 @@ From github.com/mitchellh/go-wordwrap
 wrapstring
 
 Options:
+  -context JSON
+        JSON object to use as template context
   -dest path
         destination path (default ".")
   -dry-run
         dry run output only (output txtar to stdout)
+  -dump-context path
+        path to location to save context produced by user input
   -verbose
         log debug output (default silent)
 ```

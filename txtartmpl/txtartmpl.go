@@ -46,6 +46,7 @@ func (app *appEnv) ParseArgs(args []string) error {
 	fl.StringVar(&app.dstPath, "dest", ".", "destination `path`")
 	fl.BoolVar(&app.dryRun, "dry-run", false, "dry run output only (output txtar to stdout)")
 	fl.Func("context", "`JSON` object to use as template context", app.setTmplCtx)
+	fl.StringVar(&app.dumpCtx, "dump-context", "", "`path` to load/save context produced by user input")
 	app.setusage(fl)
 	if err := fl.Parse(args); err != nil {
 		return err
@@ -69,6 +70,7 @@ type appEnv struct {
 	dryRun  bool
 	src     io.ReadCloser
 	tmplCtx map[string]interface{}
+	dumpCtx string
 	*log.Logger
 }
 
@@ -202,55 +204,92 @@ func (app *appEnv) Exec() (err error) {
 	return err
 }
 
+func (app *appEnv) dumpContext(tctx map[string]interface{}) {
+	if app.dumpCtx == "" {
+		return
+	}
+	b, err := json.Marshal(tctx)
+	if err != nil {
+		panic(err)
+	}
+	if err = os.WriteFile(app.dumpCtx, b, 0644); err != nil {
+		fmt.Fprintf(os.Stderr, "problem dumping context file: %v\n", err)
+	}
+}
+
 func (app *appEnv) TemplateContextFrom(b []byte) (map[string]interface{}, error) {
 	if app.tmplCtx != nil {
 		return app.tmplCtx, nil
 	}
 	m := make(map[string]interface{})
+	if app.dumpCtx != "" {
+		if b, err := os.ReadFile(app.dumpCtx); err == nil {
+			_ = json.Unmarshal(b, &m)
+		}
+	}
 	s := bufio.NewScanner(bytes.NewReader(b))
 	for s.Scan() {
-		line := s.Text()
-		var (
-			k, q, v string
-			i       int
-		)
-		if strings.HasPrefix(line, "#") {
-			continue
+		if err := processLine(s.Text(), m); err != nil {
+			return nil, err
 		}
-		if strings.Contains(line, "{"+"{") {
-			var buf strings.Builder
-			t := template.New("").
-				Funcs(stringFuncMap()).
-				Funcs(filepathFuncMap()).
-				Funcs(timeFuncMap()).
-				Funcs(xStringFuncMap()).
-				Funcs(wordWrapFuncMap())
-			t, err := t.Parse(line)
-			if err != nil {
-				return nil, fmt.Errorf("could not parse preliminary prompt as template: %w", err)
-			}
-			t.Execute(&buf, m)
-			line = buf.String()
-		}
-		if i = strings.IndexByte(line, ':'); i == -1 {
-			continue
-		}
-		k = strings.TrimSpace(line[:i])
-		q = k
-		line = line[i+1:]
-
-		if i = strings.IndexByte(line, '?'); i != -1 {
-			q = strings.TrimSpace(line[:i+1])
-			line = line[i+1:]
-		}
-		v = strings.TrimSpace(line)
-
-		if v == "y" || v == "n" {
-			m[k] = prompter.YN(q, v == "y")
-			continue
-		}
-
-		m[k] = prompter.Prompt(q, v)
+		app.dumpContext(m)
 	}
+
 	return m, s.Err()
+}
+
+func processLine(line string, m map[string]interface{}) error {
+	var (
+		k, q, v string
+		i       int
+	)
+	if strings.HasPrefix(line, "#") {
+		return nil
+	}
+	if strings.Contains(line, "{"+"{") {
+		var buf strings.Builder
+		t := template.New("").
+			Funcs(stringFuncMap()).
+			Funcs(filepathFuncMap()).
+			Funcs(timeFuncMap()).
+			Funcs(xStringFuncMap()).
+			Funcs(wordWrapFuncMap())
+		t, err := t.Parse(line)
+		if err != nil {
+			return fmt.Errorf("could not parse preliminary prompt as template: %w", err)
+		}
+		t.Execute(&buf, m)
+		line = buf.String()
+	}
+	if i = strings.IndexByte(line, ':'); i == -1 {
+		return nil
+	}
+	k = strings.TrimSpace(line[:i])
+	q = k
+	line = line[i+1:]
+
+	if i = strings.IndexByte(line, '?'); i != -1 {
+		q = strings.TrimSpace(line[:i+1])
+		line = line[i+1:]
+	}
+	v = strings.TrimSpace(line)
+
+	if def, ok := m[k]; ok {
+		if defb, ok := def.(bool); ok {
+			m[k] = prompter.YN(q, defb)
+			return nil
+		}
+		if defs, ok := def.(string); ok {
+			m[k] = prompter.Prompt(q, defs)
+			return nil
+		}
+	}
+
+	if v == "y" || v == "n" {
+		m[k] = prompter.YN(q, v == "y")
+		return nil
+	}
+
+	m[k] = prompter.Prompt(q, v)
+	return nil
 }
