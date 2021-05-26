@@ -285,8 +285,8 @@ func processLine(line string, m map[string]interface{}) error {
 		}
 	}
 
-	if v == "y" || v == "n" {
-		m[k] = prompter.YN(q, v == "y")
+	if l := strings.ToLower(v); l == "y" || l == "n" {
+		m[k] = prompter.YN(q, l == "y")
 		return nil
 	}
 
