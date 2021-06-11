@@ -47,6 +47,9 @@ func (app *appEnv) ParseArgs(args []string) error {
 	fl.BoolVar(&app.dryRun, "dry-run", false, "dry run output only (output txtar to stdout)")
 	fl.Func("context", "`JSON` object to use as template context", app.setTmplCtx)
 	fl.StringVar(&app.dumpCtx, "dump-context", "", "`path` to load/save context produced by user input")
+	fl.StringVar(&app.leftD, "left-delim", "{{", "left `delimiter` to use when parsing template")
+	fl.StringVar(&app.rightD, "right-delim", "}}", "right `delimiter` to use when parsing template")
+
 	app.setusage(fl)
 	if err := fl.Parse(args); err != nil {
 		return err
@@ -66,11 +69,12 @@ func (app *appEnv) ParseArgs(args []string) error {
 }
 
 type appEnv struct {
-	dstPath string
-	dryRun  bool
-	src     io.ReadCloser
-	tmplCtx map[string]interface{}
-	dumpCtx string
+	dstPath       string
+	dryRun        bool
+	leftD, rightD string
+	src           io.ReadCloser
+	tmplCtx       map[string]interface{}
+	dumpCtx       string
 	*log.Logger
 }
 
@@ -88,6 +92,8 @@ Usage:
 	springerle [options] <project file or URL>
 
 Project files are Go templates processed as txtar files. The preamble to the txtar file is used as a series of prompts for creating the template context. Each line should be formated as "key: User prompt question? default value" with colon and question mark used as delimiters. Lines beginning with # or without a colon are ignored. If the default value is "y" or "n", the prompt will be treated as a boolean. Prompt lines may use templates directives, e.g. to transform a prior prompt value into a default or skip irrelevant prompts, but premable template directives must be valid at the line level. That is, there can be no multiline blocks in the preamble.
+
+To templatize files that contain other templates, set -left-delim and -right-delim options to something not used in the template.
 
 In addition to the default Go template functions, templates can use the following functions.
 
@@ -149,6 +155,7 @@ func (app *appEnv) Exec() (err error) {
 	// check template validity
 	t := template.New("").
 		Option("missingkey=error").
+		Delims(app.leftD, app.rightD).
 		Funcs(stringFuncMap()).
 		Funcs(filepathFuncMap()).
 		Funcs(timeFuncMap()).
@@ -249,6 +256,7 @@ func processLine(line string, m map[string]interface{}) error {
 	if strings.Contains(line, "{"+"{") {
 		var buf strings.Builder
 		t := template.New("").
+			Delims(app.leftD, app.rightD).
 			Funcs(stringFuncMap()).
 			Funcs(filepathFuncMap()).
 			Funcs(timeFuncMap()).
