@@ -234,9 +234,16 @@ func (app *appEnv) TemplateContextFrom(b []byte) (map[string]interface{}, error)
 			_ = json.Unmarshal(b, &m)
 		}
 	}
+	t := template.New("").
+		Delims(app.leftD, app.rightD).
+		Funcs(stringFuncMap()).
+		Funcs(filepathFuncMap()).
+		Funcs(timeFuncMap()).
+		Funcs(xStringFuncMap()).
+		Funcs(wordWrapFuncMap())
 	s := bufio.NewScanner(bytes.NewReader(b))
 	for s.Scan() {
-		if err := processLine(s.Text(), m); err != nil {
+		if err := processLine(t, s.Text(), m); err != nil {
 			return nil, err
 		}
 		app.dumpContext(m)
@@ -245,7 +252,7 @@ func (app *appEnv) TemplateContextFrom(b []byte) (map[string]interface{}, error)
 	return m, s.Err()
 }
 
-func processLine(line string, m map[string]interface{}) error {
+func processLine(t *template.Template, line string, m map[string]interface{}) error {
 	var (
 		k, q, v string
 		i       int
@@ -255,13 +262,6 @@ func processLine(line string, m map[string]interface{}) error {
 	}
 	if strings.Contains(line, "{"+"{") {
 		var buf strings.Builder
-		t := template.New("").
-			Delims(app.leftD, app.rightD).
-			Funcs(stringFuncMap()).
-			Funcs(filepathFuncMap()).
-			Funcs(timeFuncMap()).
-			Funcs(xStringFuncMap()).
-			Funcs(wordWrapFuncMap())
 		t, err := t.Parse(line)
 		if err != nil {
 			return fmt.Errorf("could not parse preliminary prompt as template: %w", err)
