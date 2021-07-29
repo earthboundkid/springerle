@@ -269,6 +269,9 @@ func processLine(t *template.Template, line string, m map[string]interface{}) er
 		t.Execute(&buf, m)
 		line = buf.String()
 	}
+	if strings.HasPrefix(line, "#") {
+		return nil
+	}
 	if i = strings.IndexByte(line, ':'); i == -1 {
 		return nil
 	}
