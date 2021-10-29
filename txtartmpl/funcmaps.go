@@ -100,20 +100,20 @@ func stringFuncMap() map[string]interface{} {
 
 func filepathFuncMap() map[string]interface{} {
 	return map[string]interface{}{
-		"abs":       filepath.Abs,
-		"base":      filepath.Base,
-		"clean":     filepath.Clean,
-		"dir":       filepath.Dir,
-		"ext":       filepath.Ext,
-		"fromslash": filepath.FromSlash,
-		"isabs":     filepath.IsAbs,
-		"join":      filepath.Join,
-		"match":     filepath.Match,
-		"rel":       filepath.Rel,
-		"split": func(path string) [2]string {
+		"abs":          filepath.Abs,
+		"base":         filepath.Base,
+		"clean":        filepath.Clean,
+		"dir":          filepath.Dir,
+		"ext":          filepath.Ext,
+		"filepathjoin": filepath.Join,
+		"filepathsplit": func(path string) [2]string {
 			head, tail := filepath.Split(path)
 			return [...]string{head, tail}
 		},
+		"fromslash":  filepath.FromSlash,
+		"isabs":      filepath.IsAbs,
+		"match":      filepath.Match,
+		"rel":        filepath.Rel,
 		"splitlist":  filepath.SplitList,
 		"toslash":    filepath.ToSlash,
 		"volumename": filepath.VolumeName,

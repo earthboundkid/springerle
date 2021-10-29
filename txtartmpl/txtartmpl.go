@@ -105,6 +105,9 @@ From package path/filepath:
 
 %s
 
+(To avoid conflicts between functions in filepath and strings, we give longer
+names to filepath.Join and filepath.Split.)
+
 From package time:
 
 %s
