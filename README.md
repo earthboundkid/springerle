@@ -48,8 +48,11 @@ trimleftfunc trimprefix trimright trimrightfunc trimspace trimsuffix
 
 From package path/filepath:
 
-abs base clean dir ext fromslash isabs join match rel split splitlist toslash
-volumename
+abs base clean dir ext fromslash isabs filepathjoin match rel filepathsplit
+splitlist toslash volumename
+
+(To avoid conflicts between functions in filepath and strings, we give longer
+names to filepath.Join and filepath.Split.)
 
 From package time:
 
