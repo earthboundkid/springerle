@@ -95,7 +95,7 @@ Project files are Go templates processed as txtar files. The preamble to the txt
 
 To templatize files that contain other templates, set -left-delim and -right-delim options to something not used in the template.
 
-In addition to the default Go template functions, templates can use the following functions.
+In addition to the default Go template functions, templates can use the functions listed below. In order to avoid name clashes, the added function names follow a specific pattern: they combine their original package and function names using no punctuation and only lowercase letters. E.g., strings.LastIndexByte becomes stringslastindexbyte.
 
 From package strings:
 
@@ -104,9 +104,6 @@ From package strings:
 From package path/filepath:
 
 %s
-
-(To avoid conflicts between functions in filepath and strings, we give longer
-names to filepath.Join and filepath.Split.)
 
 From package time:
 
@@ -119,6 +116,8 @@ From github.com/huandu/xstrings:
 From github.com/mitchellh/go-wordwrap
 
 %s
+
+The 'wordwrap' package is a slight exception to the rules for added function names. Both 'wordwrapwrapstring' and 'wrapstring' are aliases to the same function.
 
 Options:
 `,
