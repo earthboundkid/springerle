@@ -34,40 +34,67 @@ boolean.
 To templatize files that contain other templates, set -left-delim and
 -right-delim options to something not used in the template.
 
+Project files are Go templates processed as txtar files. The preamble to the
+txtar file is used as a series of prompts for creating the template context.
+Each line should be formated as "key: User prompt question? default value" with
+colon and question mark used as delimiters. Lines beginning with # or without a
+colon are ignored. If the default value is "y" or "n", the prompt will be
+treated as a boolean. Prompt lines may use templates directives, e.g. to
+transform a prior prompt value into a default or skip irrelevant prompts, but
+premable template directives must be valid at the line level. That is, there
+can be no multiline blocks in the preamble.
+
+To templatize files that contain other templates, set -left-delim and
+-right-delim options to something not used in the template.
+
 In addition to the default Go template functions, templates can use the
-following functions.
+functions listed below. In order to avoid name clashes, the added function
+names follow a specific pattern: they combine their original package and
+function names using no punctuation and only lowercase letters. E.g.,
+strings.LastIndexByte becomes stringslastindexbyte.
 
 From package strings:
 
-compare contains containsany containsrune count equalfold fields fieldsfunc
-hasprefix hassuffix index indexany indexbyte indexfunc indexrune join lastindex
-lastindexany lastindexbyte lastindexfunc map repeat replace replaceall split
-splitafter splitaftern splitn title tolower tolowerspecial totitle
-totitlespecial toupper toupperspecial tovalidutf8 trim trimfunc trimleft
-trimleftfunc trimprefix trimright trimrightfunc trimspace trimsuffix
+stringscompare stringscontains stringscontainsany stringscontainsrune
+stringscount stringsequalfold stringsfields stringsfieldsfunc stringshasprefix
+stringshassuffix stringsindex stringsindexany stringsindexbyte
+stringsindexfunc stringsindexrune stringsjoin stringslastindex
+stringslastindexany stringslastindexbyte stringslastindexfunc stringsmap
+stringsrepeat stringsreplace stringsreplaceall stringssplit stringssplitafter
+stringssplitaftern stringssplitn stringstitle stringstolower
+stringstolowerspecial stringstotitle stringstotitlespecial stringstoupper
+stringstoupperspecial stringstovalidutf8 stringstrim stringstrimfunc
+stringstrimleft stringstrimleftfunc stringstrimprefix stringstrimright
+stringstrimrightfunc stringstrimspace stringstrimsuffix
 
 From package path/filepath:
 
-abs base clean dir ext fromslash isabs filepathjoin match rel filepathsplit
-splitlist toslash volumename
-
-(To avoid conflicts between functions in filepath and strings, we give longer
-names to filepath.Join and filepath.Split.)
+filepathabs filepathbase filepathclean filepathdir filepathext
+filepathfromslash filepathisabs filepathjoin filepathmatch filepathrel
+filepathsplit filepathsplitlist filepathtoslash filepathvolumename
 
 From package time:
 
-date now parse parseduration
+timedate timenow timeparse timeparseduration
 
 From github.com/huandu/xstrings:
 
-center countpattern delete expandtabs firstrunetolower firstrunetoupper insert
-lastpartition leftjustify partition reverse rightjustify runelen runewidth scrub
-shuffle shufflesource slice squeeze successor swapcase tocamelcase tokebabcase
-tosnakecase translate width wordcount wordsplit
+xstringscenter xstringscount xstringsdelete xstringsexpandtabs
+xstringsfirstrunetolower xstringsfirstrunetoupper xstringsinsert
+xstringslastpartition xstringsleftjustify xstringslen xstringspartition
+xstringsreverse xstringsrightjustify xstringsrunewidth xstringsscrub
+xstringsshuffle xstringsshufflesource xstringsslice xstringssqueeze
+xstringssuccessor xstringsswapcase xstringstocamelcase xstringstokebabcase
+xstringstosnakecase xstringstranslate xstringswidth xstringswordcount
+xstringswordsplit
 
 From github.com/mitchellh/go-wordwrap
 
-wrapstring
+wordwrapwrapstring wrapstring
+
+The 'wordwrap' package is a slight exception to the rules for added function
+names. Both 'wordwrapwrapstring' and 'wrapstring' are aliases to the same
+function.
 
 Options:
   -context JSON

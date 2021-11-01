@@ -1,6 +1,6 @@
 proj: Project name? My Project
-file: File name? {{ .proj | tokebabcase }}
-class: Class name? {{ .proj | tocamelcase }}
+file: File name? {{ .proj | xstringstokebabcase }}
+class: Class name? {{ .proj | xstringstocamelcase }}
 skip: Skip this? y
 {{ if not .skip }}final: Anything else? n{{end}}
 -- {{ .proj }}/{{ .file }}.txt --
