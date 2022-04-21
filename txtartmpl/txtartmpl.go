@@ -10,13 +10,14 @@ import (
 	"log"
 	"os"
 	"path/filepath"
-	"runtime/debug"
 	"sort"
 	"strings"
 	"text/template"
 
 	"github.com/Songmu/prompter"
-	"github.com/carlmjohnson/flagext"
+	"github.com/carlmjohnson/flagx"
+	"github.com/carlmjohnson/flagx/lazyio"
+	"github.com/carlmjohnson/versioninfo"
 	"github.com/mitchellh/go-wordwrap"
 	"golang.org/x/tools/txtar"
 )
@@ -40,9 +41,8 @@ func CLI(args []string) error {
 
 func (app *appEnv) ParseArgs(args []string) error {
 	fl := flag.NewFlagSet(AppName, flag.ContinueOnError)
-	app.Logger = log.New(nil, AppName+" ", log.LstdFlags)
-	flagext.LoggerVar(
-		fl, app.Logger, "verbose", flagext.LogVerbose, "log debug output")
+	app.Logger = log.New(io.Discard, AppName+" ", log.LstdFlags)
+	verbose := fl.Bool("verbose", false, "log debug output")
 	fl.StringVar(&app.dstPath, "dest", ".", "destination `path`")
 	fl.BoolVar(&app.dryRun, "dry-run", false, "dry run output only (output txtar to stdout)")
 	fl.Func("context", "`JSON` object to use as template context", app.setTmplCtx)
@@ -54,13 +54,16 @@ func (app *appEnv) ParseArgs(args []string) error {
 	if err := fl.Parse(args); err != nil {
 		return err
 	}
-	if err := flagext.ParseEnv(fl, AppName); err != nil {
+	if err := flagx.ParseEnv(fl, AppName); err != nil {
 		return err
 	}
-	if err := flagext.MustHaveArgs(fl, 0, 1); err != nil {
+	if err := flagx.MustHaveArgs(fl, 0, 1); err != nil {
 		return err
 	}
-	src := flagext.FileOrURL(flagext.StdIO, nil)
+	if *verbose {
+		app.Logger.SetOutput(os.Stderr)
+	}
+	src := lazyio.FileOrURL(lazyio.StdIO, nil)
 	app.src = src
 	if fl.NArg() > 0 {
 		return src.Set(fl.Arg(0))
@@ -80,12 +83,10 @@ type appEnv struct {
 
 func (app *appEnv) setusage(fl *flag.FlagSet) {
 	fl.Usage = func() {
-		version := "(unknown)"
-		if i, ok := debug.ReadBuildInfo(); ok {
-			version = i.Main.Version
-		}
 		s := fmt.Sprintf(
-			`springerle %s - create simple projects with the txtar format and Go templates.
+			`springerle - create simple projects with the txtar format and Go templates.
+
+Version %s %s
 
 Usage:
 
@@ -121,7 +122,8 @@ The 'wordwrap' package is a slight exception to the rules for added function nam
 
 Options:
 `,
-			version,
+			versioninfo.Version,
+			versioninfo.Revision,
 			sortFuncMapNames(stringFuncMap()),
 			sortFuncMapNames(filepathFuncMap()),
 			sortFuncMapNames(timeFuncMap()),
