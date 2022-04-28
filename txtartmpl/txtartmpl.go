@@ -247,7 +247,7 @@ func (app *appEnv) TemplateContextFrom(b []byte) (map[string]interface{}, error)
 		Funcs(wordWrapFuncMap())
 	s := bufio.NewScanner(bytes.NewReader(b))
 	for s.Scan() {
-		if err := processLine(t, s.Text(), m); err != nil {
+		if err := app.processLine(t, s.Text(), m); err != nil {
 			return nil, err
 		}
 		app.dumpContext(m)
@@ -256,15 +256,9 @@ func (app *appEnv) TemplateContextFrom(b []byte) (map[string]interface{}, error)
 	return m, s.Err()
 }
 
-func processLine(t *template.Template, line string, m map[string]interface{}) error {
-	var (
-		k, q, v string
-		i       int
-	)
-	if strings.HasPrefix(line, "#") {
-		return nil
-	}
-	if strings.Contains(line, "{"+"{") {
+func (app *appEnv) processLine(t *template.Template, line string, m map[string]interface{}) error {
+	var k, q, v string
+	if strings.Contains(line, app.leftD) {
 		var buf strings.Builder
 		t, err := t.Parse(line)
 		if err != nil {
@@ -273,21 +267,21 @@ func processLine(t *template.Template, line string, m map[string]interface{}) er
 		t.Execute(&buf, m)
 		line = buf.String()
 	}
+	line = strings.TrimSpace(line)
 	if strings.HasPrefix(line, "#") {
 		return nil
 	}
-	if i = strings.IndexByte(line, ':'); i == -1 {
+	k, v, ok := strings.Cut(line, ":")
+	if !ok {
 		return nil
 	}
-	k = strings.TrimSpace(line[:i])
 	q = k
-	line = line[i+1:]
-
-	if i = strings.IndexByte(line, '?'); i != -1 {
-		q = strings.TrimSpace(line[:i+1])
-		line = line[i+1:]
+	if prefix, suffix, ok := strings.Cut(v, "?"); ok {
+		q, v = prefix, suffix
 	}
-	v = strings.TrimSpace(line)
+	k = strings.TrimSpace(k)
+	v = strings.TrimSpace(v)
+	q = strings.TrimSpace(q)
 
 	if def, ok := m[k]; ok {
 		if defb, ok := def.(bool); ok {
