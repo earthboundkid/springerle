@@ -10,11 +10,11 @@ require (
 	github.com/carlmjohnson/versioninfo v0.22.1
 	github.com/huandu/xstrings v1.3.2
 	github.com/mitchellh/go-wordwrap v1.0.1
-	golang.org/x/tools v0.1.0
+	golang.org/x/tools v0.1.10
 )
 
 require (
-	github.com/mattn/go-isatty v0.0.12 // indirect
-	golang.org/x/sys v0.0.0-20210319071255-635bc2c9138d // indirect
-	golang.org/x/term v0.0.0-20210317153231-de623e64d2a6 // indirect
+	github.com/mattn/go-isatty v0.0.14 // indirect
+	golang.org/x/sys v0.0.0-20220422013727-9388b58f7150 // indirect
+	golang.org/x/term v0.0.0-20220411215600-e5f449aeb171 // indirect
 )
