@@ -76,7 +76,7 @@ type appEnv struct {
 	dryRun        bool
 	leftD, rightD string
 	src           io.ReadCloser
-	tmplCtx       map[string]interface{}
+	tmplCtx       map[string]any
 	dumpCtx       string
 	*log.Logger
 }
@@ -137,7 +137,7 @@ Options:
 }
 
 func (app *appEnv) setTmplCtx(s string) error {
-	app.tmplCtx = make(map[string]interface{})
+	app.tmplCtx = make(map[string]any)
 	return json.Unmarshal([]byte(s), &app.tmplCtx)
 }
 
@@ -215,7 +215,7 @@ func (app *appEnv) Exec() (err error) {
 	return err
 }
 
-func (app *appEnv) dumpContext(tctx map[string]interface{}) {
+func (app *appEnv) dumpContext(tctx map[string]any) {
 	if app.dumpCtx == "" {
 		return
 	}
@@ -228,11 +228,11 @@ func (app *appEnv) dumpContext(tctx map[string]interface{}) {
 	}
 }
 
-func (app *appEnv) TemplateContextFrom(b []byte) (map[string]interface{}, error) {
+func (app *appEnv) TemplateContextFrom(b []byte) (map[string]any, error) {
 	if app.tmplCtx != nil {
 		return app.tmplCtx, nil
 	}
-	m := make(map[string]interface{})
+	m := make(map[string]any)
 	if app.dumpCtx != "" {
 		if b, err := os.ReadFile(app.dumpCtx); err == nil {
 			_ = json.Unmarshal(b, &m)
@@ -256,7 +256,7 @@ func (app *appEnv) TemplateContextFrom(b []byte) (map[string]interface{}, error)
 	return m, s.Err()
 }
 
-func (app *appEnv) processLine(t *template.Template, line string, m map[string]interface{}) error {
+func (app *appEnv) processLine(t *template.Template, line string, m map[string]any) error {
 	var k, q, v string
 	if strings.Contains(line, app.leftD) {
 		var buf strings.Builder

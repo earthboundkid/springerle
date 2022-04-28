@@ -9,8 +9,8 @@ import (
 	"github.com/mitchellh/go-wordwrap"
 )
 
-func xStringFuncMap() map[string]interface{} {
-	return map[string]interface{}{
+func xStringFuncMap() map[string]any {
+	return map[string]any{
 		"xstringscenter":           xstrings.Center,
 		"xstringscount":            xstrings.Count,
 		"xstringsdelete":           xstrings.Delete,
@@ -48,8 +48,8 @@ func xStringFuncMap() map[string]interface{} {
 	}
 }
 
-func stringFuncMap() map[string]interface{} {
-	return map[string]interface{}{
+func stringFuncMap() map[string]any {
+	return map[string]any{
 		"stringscompare":        strings.Compare,
 		"stringscontains":       strings.Contains,
 		"stringscontainsany":    strings.ContainsAny,
@@ -98,8 +98,8 @@ func stringFuncMap() map[string]interface{} {
 	}
 }
 
-func filepathFuncMap() map[string]interface{} {
-	return map[string]interface{}{
+func filepathFuncMap() map[string]any {
+	return map[string]any{
 		"filepathabs":       filepath.Abs,
 		"filepathbase":      filepath.Base,
 		"filepathclean":     filepath.Clean,
@@ -120,8 +120,8 @@ func filepathFuncMap() map[string]interface{} {
 	}
 }
 
-func timeFuncMap() map[string]interface{} {
-	return map[string]interface{}{
+func timeFuncMap() map[string]any {
+	return map[string]any{
 		"timedate":          time.Date,
 		"timenow":           time.Now,
 		"timeparse":         time.Parse,
@@ -129,8 +129,8 @@ func timeFuncMap() map[string]interface{} {
 	}
 }
 
-func wordWrapFuncMap() map[string]interface{} {
-	return map[string]interface{}{
+func wordWrapFuncMap() map[string]any {
+	return map[string]any{
 		"wordwrapwrapstring": wordwrap.WrapString,
 		"wrapstring":         wordwrap.WrapString,
 	}
