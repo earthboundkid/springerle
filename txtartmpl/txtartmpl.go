@@ -84,9 +84,7 @@ type appEnv struct {
 func (app *appEnv) setusage(fl *flag.FlagSet) {
 	fl.Usage = func() {
 		s := fmt.Sprintf(
-			`springerle - create simple projects with the txtar format and Go templates.
-
-Version %s %s
+			`springerle (%s) - create simple projects with the txtar format and Go templates.
 
 Usage:
 
@@ -122,8 +120,7 @@ The 'wordwrap' package is a slight exception to the rules for added function nam
 
 Options:
 `,
-			versioninfo.Version,
-			versioninfo.Revision,
+			versioninfo.Short(),
 			sortFuncMapNames(stringFuncMap()),
 			sortFuncMapNames(filepathFuncMap()),
 			sortFuncMapNames(timeFuncMap()),
