@@ -25,16 +25,6 @@ Usage:
     springerle [options] <project file or URL>
 
 Project files are Go templates processed as txtar files. The preamble to the
-txtar file is used as prompts for creating the template context. Each line
-should be formated as "key: User prompt question? default value" with colon and
-question mark used as delimiters. Lines beginning with # or without a colon are
-ignored. If the default value is "y" or "n", the prompt will be treated as a
-boolean.
-
-To templatize files that contain other templates, set -left-delim and
--right-delim options to something not used in the template.
-
-Project files are Go templates processed as txtar files. The preamble to the
 txtar file is used as a series of prompts for creating the template context.
 Each line should be formated as "key: User prompt question? default value" with
 colon and question mark used as delimiters. Lines beginning with # or without a
