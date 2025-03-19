@@ -14,10 +14,10 @@ import (
 	"strings"
 	"text/template"
 
-	"github.com/Songmu/prompter"
-	"github.com/carlmjohnson/flagx"
-	"github.com/carlmjohnson/flagx/lazyio"
-	"github.com/carlmjohnson/versioninfo"
+	"github.com/earthboundkid/flagx/v2"
+	"github.com/earthboundkid/flagx/v2/lazyio"
+	"github.com/earthboundkid/springerle/v2/prompt"
+	"github.com/earthboundkid/versioninfo/v2"
 	"github.com/mitchellh/go-wordwrap"
 	"golang.org/x/tools/txtar"
 )
@@ -151,8 +151,10 @@ func sortFuncMapNames(m template.FuncMap) string {
 }
 
 func (app *appEnv) Exec() (err error) {
-	var buf bytes.Buffer
+	stop := prompt.Init()
+	defer stop()
 
+	var buf bytes.Buffer
 	if _, err = io.Copy(&buf, app.src); err != nil {
 		return err
 	}
@@ -285,20 +287,20 @@ func (app *appEnv) processLine(t *template.Template, line string, m map[string]a
 
 	if def, ok := m[k]; ok {
 		if defb, ok := def.(bool); ok {
-			m[k] = prompter.YN(q, defb)
+			m[k] = prompt.YN(q, defb)
 			return nil
 		}
 		if defs, ok := def.(string); ok {
-			m[k] = prompter.Prompt(q, defs)
+			m[k] = prompt.Prompt(q, defs)
 			return nil
 		}
 	}
 
 	if l := strings.ToLower(v); l == "y" || l == "n" {
-		m[k] = prompter.YN(q, l == "y")
+		m[k] = prompt.YN(q, l == "y")
 		return nil
 	}
 
-	m[k] = prompter.Prompt(q, v)
+	m[k] = prompt.Prompt(q, v)
 	return nil
 }

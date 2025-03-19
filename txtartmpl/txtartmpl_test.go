@@ -6,7 +6,7 @@ import (
 
 	"github.com/carlmjohnson/be"
 	"github.com/carlmjohnson/exitcode"
-	"github.com/carlmjohnson/springerle/txtartmpl"
+	"github.com/earthboundkid/springerle/v2/txtartmpl"
 )
 
 func TestCLI(t *testing.T) {

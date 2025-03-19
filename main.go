@@ -4,7 +4,7 @@ import (
 	"os"
 
 	"github.com/carlmjohnson/exitcode"
-	"github.com/carlmjohnson/springerle/txtartmpl"
+	"github.com/earthboundkid/springerle/v2/txtartmpl"
 )
 
 func main() {
