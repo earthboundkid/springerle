@@ -11,7 +11,11 @@ import (
 var console *term.Terminal
 
 func Init() (stop func()) {
-	oldState, err := term.MakeRaw(int(os.Stdin.Fd()))
+	fd := int(os.Stdin.Fd())
+	if !term.IsTerminal(fd) {
+		return func() {}
+	}
+	oldState, err := term.MakeRaw(fd)
 	if err != nil {
 		panic(err)
 	}
