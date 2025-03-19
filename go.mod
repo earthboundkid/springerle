@@ -10,7 +10,7 @@ require (
 	github.com/huandu/xstrings v1.3.2
 	github.com/mitchellh/go-wordwrap v1.0.1
 	golang.org/x/term v0.30.0
-	golang.org/x/tools v0.1.10
+	golang.org/x/tools v0.31.0
 )
 
 require golang.org/x/sys v0.31.0 // indirect
